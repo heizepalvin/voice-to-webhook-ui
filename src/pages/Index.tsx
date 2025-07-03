@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useCallback } from 'react';
 import { toast } from 'sonner';
 import { 
@@ -6,7 +5,7 @@ import {
   Settings, 
   Send, 
   Square, 
-  Waveform,
+  AudioWaveform,
   Globe,
   MessageSquare,
   Zap,
@@ -195,7 +194,7 @@ const Index = () => {
             {/* Recording Status */}
             {isRecording && (
               <div className="flex items-center justify-center space-x-2 text-pink-600">
-                <Waveform className="h-5 w-5 animate-pulse" />
+                <AudioWaveform className="h-5 w-5 animate-pulse" />
                 <span className="font-medium">음성을 듣고 있습니다...</span>
               </div>
             )}
