@@ -2,6 +2,8 @@
 import React from 'react';
 import { Mic, Square, AudioWaveform } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { AudioLevelIndicator } from '@/components/AudioLevelIndicator';
+import { useAudioLevel } from '@/hooks/useAudioLevel';
 
 interface VoiceRecorderProps {
   isRecording: boolean;
@@ -18,8 +20,13 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
   onStopRecording,
   onClearText
 }) => {
+  const audioLevel = useAudioLevel(isRecording);
+
   return (
     <>
+      {/* Audio Level Indicator */}
+      <AudioLevelIndicator audioLevel={audioLevel} isRecording={isRecording} />
+
       {/* Recording Controls */}
       <div className="flex justify-center space-x-4">
         {!isRecording ? (
