@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Send } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -11,17 +11,19 @@ interface WebhookSenderProps {
   onTextCleared: () => void;
   autoSendEnabled: boolean;
   onToggleAutoSend: () => void;
+  webhookUrl: string;
+  onWebhookUrlChange: (url: string) => void;
 }
 
 export const WebhookSender: React.FC<WebhookSenderProps> = ({
   transcribedText,
   onTextCleared,
   autoSendEnabled,
-  onToggleAutoSend
+  onToggleAutoSend,
+  webhookUrl,
+  onWebhookUrlChange
 }) => {
-  const [webhookUrl, setWebhookUrl] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
-  const [lastSentText, setLastSentText] = useState('');
 
   const sendToWebhook = async (textToSend?: string) => {
     const text = textToSend || transcribedText;
@@ -55,7 +57,6 @@ export const WebhookSender: React.FC<WebhookSenderProps> = ({
       });
 
       toast.success('텍스트가 성공적으로 전송되었습니다!');
-      setLastSentText(text);
       onTextCleared();
     } catch (error) {
       console.error("Error sending to webhook:", error);
@@ -65,19 +66,6 @@ export const WebhookSender: React.FC<WebhookSenderProps> = ({
     }
   };
 
-  // 자동 전송 기능
-  useEffect(() => {
-    if (autoSendEnabled && transcribedText && transcribedText !== lastSentText && transcribedText.trim().length > 0) {
-      // 텍스트가 변경되고 웹훅 URL이 있을 때만 자동 전송
-      if (webhookUrl.trim()) {
-        const timeoutId = setTimeout(() => {
-          sendToWebhook(transcribedText);
-        }, 500); // 0.5초 지연으로 연속 전송 방지
-        
-        return () => clearTimeout(timeoutId);
-      }
-    }
-  }, [transcribedText, autoSendEnabled, webhookUrl, lastSentText]);
 
   return (
     <>
@@ -90,7 +78,7 @@ export const WebhookSender: React.FC<WebhookSenderProps> = ({
           type="url"
           placeholder="https://hook.integromat.com/..."
           value={webhookUrl}
-          onChange={(e) => setWebhookUrl(e.target.value)}
+          onChange={(e) => onWebhookUrlChange(e.target.value)}
           className="w-full"
         />
       </div>
@@ -138,7 +126,7 @@ export const WebhookSender: React.FC<WebhookSenderProps> = ({
       {autoSendEnabled && (
         <div className="text-center text-sm text-green-600 bg-green-50 rounded-lg p-3">
           <span className="font-medium">자동 전송 활성화됨</span>
-          <p className="text-xs mt-1">음성 인식이 완료되면 자동으로 웹훅에 전송됩니다</p>
+          <p className="text-xs mt-1">음성 인식이 종료되면 자동으로 웹훅에 전송됩니다</p>
         </div>
       )}
     </>

@@ -2,11 +2,12 @@
 import { useState, useRef, useCallback } from 'react';
 import { toast } from 'sonner';
 
-export const useSpeechRecognition = () => {
+export const useSpeechRecognition = (onRecognitionEnd?: (text: string) => void) => {
   const [isRecording, setIsRecording] = useState(false);
   const [transcribedText, setTranscribedText] = useState('');
   const recognitionRef = useRef<any>(null);
   const silenceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const transcribedTextRef = useRef<string>('');
 
   const clearSilenceTimeout = () => {
     if (silenceTimeoutRef.current) {
@@ -61,7 +62,11 @@ export const useSpeechRecognition = () => {
       }
       
       if (finalTranscript) {
-        setTranscribedText(prev => prev + finalTranscript + ' ');
+        setTranscribedText(prev => {
+          const newText = prev + finalTranscript + ' ';
+          transcribedTextRef.current = newText;
+          return newText;
+        });
         startSilenceTimeout(); // 최종 텍스트가 추가된 후 다시 타이머 시작
       } else if (interimTranscript) {
         startSilenceTimeout(); // 중간 결과에서도 타이머 리셋
@@ -78,11 +83,16 @@ export const useSpeechRecognition = () => {
     recognition.onend = () => {
       setIsRecording(false);
       clearSilenceTimeout();
+      
+      // 음성 인식이 종료될 때 콜백 호출
+      if (onRecognitionEnd && transcribedTextRef.current.trim()) {
+        onRecognitionEnd(transcribedTextRef.current);
+      }
     };
 
     recognition.start();
     recognitionRef.current = recognition;
-  }, [isRecording]);
+  }, [isRecording, onRecognitionEnd, transcribedText]);
 
   const stopRecording = useCallback(() => {
     if (recognitionRef.current) {
@@ -95,6 +105,7 @@ export const useSpeechRecognition = () => {
 
   const clearText = useCallback(() => {
     setTranscribedText('');
+    transcribedTextRef.current = '';
   }, []);
 
   return {

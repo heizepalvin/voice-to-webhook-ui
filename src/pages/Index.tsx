@@ -1,24 +1,59 @@
 
-import React from 'react';
+import React, { useRef, useState } from 'react';
 import { VoiceRecorder } from '@/components/VoiceRecorder';
 import { WebhookSender } from '@/components/WebhookSender';
 import { ShortcutGrid } from '@/components/ShortcutGrid';
 import { useSpeechRecognition } from '@/hooks/useSpeechRecognition';
 import { useAutoSend } from '@/hooks/useAutoSend';
+import { toast } from 'sonner';
 
 const Index = () => {
+  const [webhookUrl, setWebhookUrl] = useState('https://hook.us2.make.com/lsbr6c0unalpuh5ywqrpnqm6vpsl4l6q');
+  const sendingRef = useRef(false);
+
+  const {
+    autoSendEnabled,
+    toggleAutoSend
+  } = useAutoSend();
+
+  const handleRecognitionEnd = async (text: string) => {
+    // 바로 전송이 활성화되어 있고, 웹훅 URL이 있으며, 현재 전송 중이 아닐 때만 전송
+    if (autoSendEnabled && webhookUrl.trim() && !sendingRef.current) {
+      sendingRef.current = true;
+      console.log('음성 인식 종료 - 자동 전송 시작');
+      
+      try {
+        const response = await fetch(webhookUrl, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          mode: "no-cors",
+          body: JSON.stringify({
+            text: text.trim(),
+            timestamp: new Date().toISOString(),
+            source: 'voice-to-text-app'
+          }),
+        });
+
+        toast.success('텍스트가 성공적으로 전송되었습니다!');
+        clearText();
+      } catch (error) {
+        console.error("Error sending to webhook:", error);
+        toast.error('웹훅 전송 중 오류가 발생했습니다.');
+      } finally {
+        sendingRef.current = false;
+      }
+    }
+  };
+
   const {
     isRecording,
     transcribedText,
     startRecording,
     stopRecording,
     clearText
-  } = useSpeechRecognition();
-
-  const {
-    autoSendEnabled,
-    toggleAutoSend
-  } = useAutoSend();
+  } = useSpeechRecognition(handleRecognitionEnd);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-4">
@@ -37,6 +72,8 @@ const Index = () => {
               onTextCleared={clearText}
               autoSendEnabled={autoSendEnabled}
               onToggleAutoSend={toggleAutoSend}
+              webhookUrl={webhookUrl}
+              onWebhookUrlChange={setWebhookUrl}
             />
             
             <VoiceRecorder
