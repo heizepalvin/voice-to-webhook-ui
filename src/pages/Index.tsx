@@ -4,6 +4,7 @@ import { VoiceRecorder } from '@/components/VoiceRecorder';
 import { WebhookSender } from '@/components/WebhookSender';
 import { ShortcutGrid } from '@/components/ShortcutGrid';
 import { useSpeechRecognition } from '@/hooks/useSpeechRecognition';
+import { useAutoSend } from '@/hooks/useAutoSend';
 
 const Index = () => {
   const {
@@ -13,6 +14,11 @@ const Index = () => {
     stopRecording,
     clearText
   } = useSpeechRecognition();
+
+  const {
+    autoSendEnabled,
+    toggleAutoSend
+  } = useAutoSend();
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-4">
@@ -29,6 +35,8 @@ const Index = () => {
             <WebhookSender 
               transcribedText={transcribedText}
               onTextCleared={clearText}
+              autoSendEnabled={autoSendEnabled}
+              onToggleAutoSend={toggleAutoSend}
             />
             
             <VoiceRecorder
@@ -48,6 +56,7 @@ const Index = () => {
         <div className="text-center mt-12 text-gray-500 text-sm">
           <p>음성 인식 기능을 사용하려면 마이크 권한을 허용해주세요.</p>
           <p className="mt-1">Chrome, Safari, Edge 브라우저에서 최적화되어 있습니다.</p>
+          <p className="mt-1">3초간 음성이 감지되지 않으면 자동으로 인식이 종료됩니다.</p>
         </div>
       </div>
     </div>
